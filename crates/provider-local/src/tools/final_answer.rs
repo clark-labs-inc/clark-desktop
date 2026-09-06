@@ -25,14 +25,14 @@ impl ToolExecutor for FinalAnswer {
         json!({
             "type": "object",
             "properties": {
-                "content": {
-                    "type": "string",
-                    "description": "Complete final answer to show the user."
-                },
                 "files": {
                     "type": "array",
                     "items": {"type": "string"},
                     "description": "Existing user-facing deliverable file paths, relative to the active workspace when possible. List generated reports, archives, images, documents, and other files the user should be able to open or save. Omit ordinary source files changed as part of implementation work."
+                },
+                "content": {
+                    "type": "string",
+                    "description": "Complete final answer to show the user."
                 }
             },
             "required": ["content"]

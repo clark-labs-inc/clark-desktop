@@ -174,18 +174,6 @@ fn action_schema(
 ) -> Value {
     let mut properties = Map::new();
     properties.insert(
-        "risk".to_string(),
-        json!({
-            "type": "string",
-            "enum": ["routine", "destructive", "financial", "external_communication", "credential", "security_sensitive", "ambiguous"],
-            "description": "Advisory expected effect. The trusted backend independently classifies the observed target."
-        }),
-    );
-    properties.insert(
-        "reason".to_string(),
-        json!({"type": "string", "description": "Specific reason for this action; maximum 500 characters."}),
-    );
-    properties.insert(
         "app_bundle_id".to_string(),
         json!({"type": "string", "description": "Exact bundle id from computer_get_state."}),
     );
@@ -205,19 +193,25 @@ fn action_schema(
         properties.insert(name.to_string(), schema);
     }
     properties.insert(
+        "reason".to_string(),
+        json!({"type": "string", "description": "Specific reason for this action; maximum 500 characters."}),
+    );
+    properties.insert(
+        "risk".to_string(),
+        json!({
+            "type": "string",
+            "enum": ["routine", "destructive", "financial", "external_communication", "credential", "security_sensitive", "ambiguous"],
+            "description": "Advisory expected effect. The trusted backend independently classifies the observed target."
+        }),
+    );
+    properties.insert(
         "dry_run".to_string(),
         json!({"type": "boolean", "description": "Validate and produce a receipt without synthesizing input."}),
     );
 
-    let mut required = vec![
-        "risk",
-        "reason",
-        "app_bundle_id",
-        "pid",
-        "window_id",
-        "observation_id",
-    ];
+    let mut required = vec!["app_bundle_id", "pid", "window_id", "observation_id"];
     required.extend_from_slice(action_required);
+    required.extend_from_slice(&["reason", "risk"]);
     json!({
         "type": "object",
         "description": description,
@@ -231,7 +225,7 @@ mod tests {
     use super::*;
 
     #[test]
-    fn schemas_avoid_root_composition_and_keep_decision_before_payload() {
+    fn schemas_locate_the_action_before_assessing_its_risk() {
         for schema in [
             click(),
             type_text(),
@@ -251,16 +245,10 @@ mod tests {
                 .map(String::as_str)
                 .collect::<Vec<_>>();
             assert_eq!(
-                &names[..6],
-                [
-                    "risk",
-                    "reason",
-                    "app_bundle_id",
-                    "pid",
-                    "window_id",
-                    "observation_id"
-                ]
+                &names[..4],
+                ["app_bundle_id", "pid", "window_id", "observation_id"]
             );
+            assert_eq!(&names[names.len() - 3..], ["reason", "risk", "dry_run"]);
         }
     }
 }

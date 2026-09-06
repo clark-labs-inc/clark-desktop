@@ -26,19 +26,19 @@ impl ToolExecutor for VerifyEffect {
             "type": "object",
             "properties": {
                 "effect_id": {"type": "string", "description": "Receipt id returned by the mutating tool."},
-                "status": {
-                    "type": "string",
-                    "enum": ["verified", "mismatch", "unverifiable"],
-                    "description": "Whether canonical state matches, differs, or cannot be read back."
-                },
                 "evidence": {
                     "type": "string",
                     "description": "Concrete read-back evidence or the concrete reason canonical verification is unavailable."
                 },
                 "expected": {"type": "string", "description": "Optional exact scalar expected value for deterministic byte-for-byte comparison. Omit both comparison fields when evidence summarizes multiple facts."},
-                "observed": {"type": "string", "description": "Optional exact scalar copied from canonical state. Must be byte-identical to expected for verified, different for mismatch. Omit both fields for summary evidence."}
+                "observed": {"type": "string", "description": "Optional exact scalar copied from canonical state. Must be byte-identical to expected for verified, different for mismatch. Omit both fields for summary evidence."},
+                "status": {
+                    "type": "string",
+                    "enum": ["verified", "mismatch", "unverifiable"],
+                    "description": "Whether canonical state matches, differs, or cannot be read back."
+                }
             },
-            "required": ["effect_id", "status", "evidence"]
+            "required": ["effect_id", "evidence", "status"]
         })
     }
 

@@ -194,13 +194,13 @@ their signing identities, sidecars, and release launchers outside this repo.
 - **File size: soft limit 500 lines, hard limit 800.** At 500, split before
   adding code; at 800, extract a submodule first. Rust and TypeScript.
 - **Order is part of the prompt.** Tool-call schemas in `provider-local` are
-  consumed autoregressively — the model generates arguments in the advertised
-  property order — so schemas are authored locate-before-payload (`edit_file`:
+  consumed autoregressively — advertised property order guides argument
+  generation but does not enforce output order — so schemas are authored locate-before-payload (`edit_file`:
   `path → old_string → new_string`), decide-before-write (`memory`:
   `action → scope → title → content`), and rationale-first (`update_plan`:
   `explanation → plan`). serde_json's `preserve_order` feature in the workspace
   `Cargo.toml` is load-bearing (without it schemas alphabetize on the wire) and
-  `schema_property_order_survives_serialization` in `tools/mod.rs` pins the
+  `schema_property_order_survives_serialization` in `tools/schema_order_tests.rs` pins the
   order. When adding a tool, order properties by what the model should commit
   to first, and add the tool to that test if the order carries semantics. The
   same thinking applies to the system prompt (`prompt.rs`): hard rules go

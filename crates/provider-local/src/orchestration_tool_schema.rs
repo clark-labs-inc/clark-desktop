@@ -28,12 +28,28 @@ pub(super) fn resolve_schema() -> Value {
             "decisions":{"type":"array","minItems":1,"items":{
                 "type":"object","properties":{
                     "task_id":{"type":"string"},
-                    "decision":{"type":"string","enum":["accept","rework"]},
-                    "feedback":{"type":"string"}
+                    "feedback":{"type":"string","description":"Concrete findings from the returned evidence, before choosing accept or rework."},
+                    "decision":{"type":"string","enum":["accept","rework"]}
                 },"required":["task_id","decision"],"additionalProperties":false
             }}
         },
         "required":["orchestration_id","decisions"],
         "additionalProperties":false
     })
+}
+
+#[cfg(test)]
+mod tests {
+    #[test]
+    fn review_feedback_precedes_the_decision_on_the_wire() {
+        let wire = serde_json::to_string(&super::resolve_schema()).unwrap();
+        let schema: serde_json::Value = serde_json::from_str(&wire).unwrap();
+        let keys = schema["properties"]["decisions"]["items"]["properties"]
+            .as_object()
+            .unwrap()
+            .keys()
+            .map(String::as_str)
+            .collect::<Vec<_>>();
+        assert_eq!(keys, ["task_id", "feedback", "decision"]);
+    }
 }

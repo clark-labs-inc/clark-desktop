@@ -111,13 +111,13 @@ impl ToolExecutor for SecurityPocExecute {
                     "type": "string",
                     "description": "Concrete behavior the script asserts before returning the expected exit code."
                 },
-                "script": {
-                    "type": "string",
-                    "description": "Self-contained offline PoC control. Networking is unavailable and source writes affect only a disposable copy."
-                },
                 "expected_exit_code": {
                     "type": "integer",
                     "description": "Exit code meaning the control observed its expected behavior. Defaults to 0."
+                },
+                "script": {
+                    "type": "string",
+                    "description": "Self-contained offline PoC control. Networking is unavailable and source writes affect only a disposable copy."
                 },
                 "timeout_seconds": {
                     "type": "integer",

@@ -136,10 +136,7 @@ pub(super) fn prompt_text(input: &PromptInput) -> String {
     let parts = prompt_parts(input);
     match parts.text_attachment_context.is_empty() {
         true => parts.user_request,
-        false => format!(
-            "{}\n\n{}",
-            parts.user_request, parts.text_attachment_context
-        ),
+        false => assemble_turn_prompt(&[parts.text_attachment_context], &parts.user_request),
     }
 }
 
@@ -257,6 +254,22 @@ pub(super) fn decode_base64_text(data: &str) -> std::result::Result<String, ()> 
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[test]
+    fn steering_attachments_precede_the_actual_request() {
+        let input = PromptInput {
+            blocks: vec![ContentBlock::text("Inspect this attachment")],
+            attachments: vec![agent_core::domain::PendingUpload {
+                filename: "note.txt".into(),
+                content_type: "text/plain".into(),
+                data_base64: "aGVsbG8=".into(),
+            }],
+        };
+        let text = prompt_text(&input);
+        assert!(text.contains("hello"));
+        assert!(text.ends_with("# User request\nInspect this attachment"));
+        assert!(text.find("attached text file").unwrap() < text.find("# User request").unwrap());
+    }
 
     #[test]
     fn derives_one_existing_user_named_directory_and_projects_it_into_context() {

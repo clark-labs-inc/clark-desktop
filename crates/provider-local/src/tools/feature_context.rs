@@ -242,22 +242,22 @@ impl ToolExecutor for FeatureContextFeedbackTool {
         json!({
             "type": "object",
             "properties": {
-                "outcome": {
-                    "type": "string",
-                    "enum": ["verified", "diverged", "partially_verified", "not_verified"]
-                },
-                "summary": {
-                    "type": "string",
-                    "description": "Concise implementation result for the human to review before submission."
-                },
                 "evidence_refs": {
                     "type": "array",
                     "items": { "type": "string" },
                     "maxItems": 32,
                     "description": "Non-secret test, commit, deployment, or artifact receipt references."
+                },
+                "summary": {
+                    "type": "string",
+                    "description": "Concise implementation result for the human to review before submission."
+                },
+                "outcome": {
+                    "type": "string",
+                    "enum": ["verified", "diverged", "partially_verified", "not_verified"]
                 }
             },
-            "required": ["outcome", "summary"],
+            "required": ["summary", "outcome"],
             "additionalProperties": false
         })
     }
@@ -439,6 +439,16 @@ mod tests {
     async fn feedback_tenant_and_revision_come_only_from_the_approved_plan() {
         let provider = Arc::new(CapturingContext::default());
         let tool = FeatureContextFeedbackTool::new(provider.clone());
+        let schema = tool.parameters();
+        assert_eq!(
+            schema["properties"]
+                .as_object()
+                .unwrap()
+                .keys()
+                .map(String::as_str)
+                .collect::<Vec<_>>(),
+            ["evidence_refs", "summary", "outcome"]
+        );
         let plan = ProposedPlan {
             id: "plan-7".into(),
             revision: 1,

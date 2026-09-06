@@ -204,3 +204,62 @@ Final regression checks for this UI change: frontend typecheck, production
 build, 847 frontend tests (5 skipped), Rust formatting, Clippy for the four
 foundation crates, 816 nextest tests (8 skipped), and the agent-core WASM
 compile check passed. No hosted-provider calls or release deployment were run.
+
+
+## Autoregressive prompt and tool audit — 2026-09-05
+
+Scope: foundation system and per-turn prompt assembly, steering, local tool
+schemas, computer-action schemas, delegated review receipts, and the local
+schema-to-wire adapter. The audit inspected existing planning, file-edit,
+memory, image, device, and deferred-tool ordering as well. Product-owned
+prompt overrides and third-party MCP schema authorship are outside this result.
+
+The governing rule is dependency order: generate the concrete inputs needed
+for a judgment before its verdict, and receive a tool result before generating
+arguments that depend on it. This is distinct from sorting every field as
+"rationale first" or "action first". Schema order guides model generation;
+it does not enforce JSON output order or establish correctness.
+
+| Finding | Change |
+| --- | --- |
+| `verify_effect` chose status before read-back evidence and comparison values | `effect_id → evidence → expected → observed → status` |
+| Delegated review resolution chose accept/rework before feedback | Nested decisions now use `task_id → feedback → decision` |
+| Enterprise feedback chose outcome before evidence and summary | `evidence_refs → summary → outcome` |
+| Final delivery composed prose before enumerating deliverables | `files → content`; files remain optional and independently validated |
+| All eight computer-action preparation schemas classified risk before selecting the observed target and action | Observed application/window identity and action arguments precede reason and advisory risk; trusted backend classification is unchanged |
+| PoC generation selected its success exit code after writing the script | Expected observation and expected exit code precede script |
+| In-flight steering appended attached text after the user's request | Attachments precede the explicit final user-request block, matching ordinary turn assembly |
+| System communication rules did not state the cross-call generation dependency | Independent batching is explicit; dependent arguments wait for a subsequent model turn containing the prerequisite result; effect verification instructions precede completion instructions |
+| Implementation guidance forced an edit after eight inspection calls | Edits follow inspection of the target, existing contract, and required dependencies; no arbitrary read quota forces premature implementation |
+
+Preserved: field names, required-field membership, invocation parsing, runtime
+permissions, approval requirements, and effect/delivery validation. The optional
+feedback and artifact fields remain optional, so order alone cannot compel
+evidence disclosure. Existing edit locate-before-payload and planning
+contract-before-prose rules remain. MCP schemas are passed through unchanged;
+we do not alphabetize or rewrite third-party contracts. The adapter clones
+schema parameters into the model request.
+
+Regression coverage now checks actual serialized `properties` keys rather than
+searching the entire schema text, which could accidentally match descriptions
+or `required` entries. Existing prompt and schema tests were moved into separate
+modules to keep source files below the repository's size thresholds.
+
+Validation on the current local source:
+
+- Nextest `88a3484d-bf10-417a-9735-23b43bd35739`: **819 passed, 8 skipped**
+  across agent-core, provider-acp, and provider-local. Includes schema order,
+  nested review ordering, steering attachment order, prompt dependency order,
+  computer actions, and existing effect/delivery contracts.
+- Workspace formatting check passed. Required clippy gate passed for agent-core, provider-acp, provider-local,
+  and devbridge; agent-core WASM check passed.
+- Frontend frozen install, typecheck, **847 tests passed / 5 skipped**, and
+  production build passed.
+- The unsigned `./script/build_and_run.sh` path built and launched `clark-code`
+  successfully. No hosted conversation or visual UI qualification was performed.
+- These checks use the existing local Cargo configuration, which redirects the
+  pinned agent dependency to the sibling checkout. They are not a clean CI or
+  packaged-release qualification.
+
+No hosted-model calls were made. Improved live-model reliability, provider-side
+schema ordering, and behavioral effect sizes remain unmeasured.
